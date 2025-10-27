@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMILEXPLOIT - AI CHAT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="logo-text">AI Assistant</div>
+                </div>
+                <div class="theme-toggle" id="themeToggle">
+                    <div class="theme-icons">
+                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="app-container">
+                <div class="sidebar">
+                    <div class="template-section">
+                        <div class="section-title">
+                            <i class="fas fa-magic"></i>
+                            <span>Template Prompt</span>
+                        </div>
+                        <div class="template-grid" id="templateGrid">
+                            <!-- Template prompt akan dimuat di sini -->
+                        </div>
+                    </div>
+                    
+                    <div class="custom-prompt">
+                        <div class="section-title">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Custom Prompt</span>
+                        </div>
+                        <textarea class="prompt-textarea" id="customPrompt" placeholder="Atur prompt khusus untuk AI sesuai kebutuhan Anda..."></textarea>
+                        <button class="btn" id="savePrompt" style="margin-top: 12px;">
+                            <i class="fas fa-save"></i>
+                            <span>Simpan Prompt</span>
+                        </button>
+                    </div>
+                    
+                    <div class="chat-history-section">
+                        <div class="section-title">
+                            <i class="fas fa-history"></i>
+                            <span>Riwayat Chat</span>
+                        </div>
+                        <div class="history-list" id="historyList">
+                            <!-- Riwayat chat akan dimuat di sini -->
+                        </div>
+                        <button class="btn btn-secondary" id="clearHistory" style="margin-top: 12px;">
+                            <i class="fas fa-trash"></i>
+                            <span>Hapus Riwayat</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-history" id="chatHistory">
+                        <!-- Pesan chat akan dimuat di sini -->
+                        <div class="message ai-message">
+                            Halo! Saya asisten AI Anda. Silakan ajukan pertanyaan atau pilih template prompt untuk memulai percakapan.
+                            <div class="message-time">Sekarang</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ketik pesan Anda di sini...">
+                        <button class="send-btn" id="sendButton">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2023 AI Assistant. Dibuat dengan <i class="fas fa-heart" style="color: #ef4444;"></i> untuk membantu Anda.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
