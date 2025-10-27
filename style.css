@@ -242,6 +242,15 @@
             box-shadow: none;
         }
 
+        .btn-new-chat {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            margin-bottom: 20px;
+        }
+
+        .btn-new-chat:hover {
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+
         .chat-history {
             flex: 1;
             overflow-y: auto;
@@ -454,6 +463,18 @@
         .template-desc {
             font-size: 12px;
             opacity: 0.8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
 
         @media (max-width: 768px) {

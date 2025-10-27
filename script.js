@@ -1,4 +1,4 @@
-  // DOM Elements
+ // DOM Elements
         const themeToggle = document.getElementById('themeToggle');
         const chatInput = document.getElementById('chatInput');
         const sendButton = document.getElementById('sendButton');
@@ -8,6 +8,7 @@
         const historyList = document.getElementById('historyList');
         const clearHistory = document.getElementById('clearHistory');
         const templateGrid = document.getElementById('templateGrid');
+        const newChatBtn = document.getElementById('newChatBtn');
 
         // Template Prompts
         const promptTemplates = [
@@ -35,42 +36,17 @@
                 title: "Ahli Kesehatan",
                 description: "Berikan informasi kesehatan yang akurat",
                 prompt: "Anda adalah asisten kesehatan virtual. Berikan informasi kesehatan yang akurat, saran gaya hidup sehat, dan rekomendasi umum. Ingatkan untuk selalu berkonsultasi dengan profesional medis untuk masalah kesehatan serius."
-            },
-            {
-                title: "Asisten Teknis",
-                description: "Bantu pemecahan masalah teknis",
-                prompt: "Anda adalah ahli teknis yang berpengalaman. Bantu saya memecahkan masalah teknis, menjelaskan konsep teknologi dengan sederhana, dan memberikan panduan langkah demi langkah untuk berbagai permasalahan teknis."
-            },
-            {
-                title: "Kreatif Konten",
-                description: "Bantu menghasilkan ide konten menarik",
-                prompt: "Anda adalah generator ide kreatif. Bantu saya menghasilkan ide konten yang segar, relevan, dan menarik untuk berbagai platform. Berikan sudut pandang unik dan saran untuk eksekusi yang optimal."
-            },
-            {
-                title: "Penasihat Keuangan",
-                description: "Bantu pengelolaan keuangan pribadi",
-                prompt: "Anda adalah penasihat keuangan virtual. Bantu saya memahami dasar-dasar pengelolaan keuangan, berikan saran untuk penganggaran, investasi, dan perencanaan keuangan masa depan dengan pertimbangan risiko yang tepat."
-            },
-            {
-                title: "Asisten Bahasa",
-                description: "Bantu terjemahan dan pembelajaran bahasa",
-                prompt: "Anda adalah ahli bahasa multilingual. Bantu saya dengan terjemahan, koreksi tata bahasa, pembelajaran bahasa baru, dan pemahaman konteks budaya dalam komunikasi antar bahasa."
-            },
-            {
-                title: "Partner Brainstorming",
-                description: "Diskusi dan kembangkan ide bersama",
-                prompt: "Anda adalah partner brainstorming yang kreatif. Bantu saya mengembangkan ide, melihat masalah dari berbagai perspektif, dan memberikan kritik konstruktif untuk menyempurnakan konsep dan solusi."
             }
         ];
 
-        // State
+        // State Management
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
         let currentPrompt = localStorage.getItem('customPrompt') || "Anda adalah asisten AI yang membantu dan ramah. Berikan jawaban yang informatif dan relevan dengan pertanyaan pengguna.";
         let chatSessions = JSON.parse(localStorage.getItem('chatSessions')) || [];
         let currentSessionId = localStorage.getItem('currentSessionId') || generateSessionId();
         let isWaitingForResponse = false;
 
-        // Initialize
+        // Initialize Application
         function init() {
             // Set theme
             if (isDarkMode) {
@@ -84,11 +60,11 @@
             renderTemplates();
             
             // Load chat history
-            loadChatHistory();
+            loadCurrentSession();
             renderHistoryList();
         }
 
-        // Render templates
+        // Render Templates
         function renderTemplates() {
             templateGrid.innerHTML = '';
             
@@ -109,23 +85,53 @@
             });
         }
 
-        // Theme toggle
+        // Theme Toggle
         themeToggle.addEventListener('click', () => {
             isDarkMode = !isDarkMode;
             document.body.classList.toggle('dark-mode', isDarkMode);
             localStorage.setItem('darkMode', isDarkMode);
         });
 
-        // Save custom prompt
+        // Save Custom Prompt
         savePrompt.addEventListener('click', () => {
             currentPrompt = customPrompt.value;
             localStorage.setItem('customPrompt', currentPrompt);
-            
-            // Show confirmation
             showNotification('Prompt berhasil disimpan!');
         });
 
-        // Send message
+        // Create New Chat
+        newChatBtn.addEventListener('click', createNewChat);
+
+        function createNewChat() {
+            // Generate new session ID
+            currentSessionId = generateSessionId();
+            localStorage.setItem('currentSessionId', currentSessionId);
+            
+            // Create empty session
+            const newSession = {
+                id: currentSessionId,
+                title: "Percakapan Baru",
+                messages: [],
+                timestamp: new Date().toISOString(),
+                context: [] // Untuk menyimpan konteks percakapan
+            };
+            
+            // Add to sessions array
+            chatSessions.unshift(newSession);
+            
+            // Save to localStorage
+            localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+            
+            // Load the new session
+            loadCurrentSession();
+            
+            // Update history list
+            renderHistoryList();
+            
+            showNotification('Percakapan baru dibuat!');
+        }
+
+        // Send Message
         function sendMessage() {
             const message = chatInput.value.trim();
             if (!message || isWaitingForResponse) return;
@@ -141,11 +147,11 @@
             isWaitingForResponse = true;
             sendButton.disabled = true;
             
-            // Send to API
+            // Send to API with conversation context
             fetchAIResponse(message);
         }
 
-        // Add message to chat
+        // Add Message to Chat
         function addMessageToChat(message, sender) {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message');
@@ -161,11 +167,11 @@
             chatHistory.appendChild(messageElement);
             scrollToBottom();
             
-            // Save to session
+            // Save to session with context
             saveMessageToSession(message, sender);
         }
 
-        // Show typing indicator
+        // Show Typing Indicator
         function showTypingIndicator() {
             const typingElement = document.createElement('div');
             typingElement.classList.add('typing-indicator');
@@ -181,7 +187,7 @@
             scrollToBottom();
         }
 
-        // Hide typing indicator
+        // Hide Typing Indicator
         function hideTypingIndicator() {
             const typingIndicator = document.getElementById('typingIndicator');
             if (typingIndicator) {
@@ -189,13 +195,21 @@
             }
         }
 
-        // Fetch AI response
+        // Fetch AI Response with Context
         async function fetchAIResponse(userMessage) {
             try {
-                // Combine custom prompt with user message
-                const fullPrompt = `${currentPrompt}\n\nPertanyaan pengguna: ${userMessage}`;
+                const currentSession = getCurrentSession();
                 
-                // Encode the user message for the URL
+                // Build conversation context (last 5 messages)
+                const recentMessages = currentSession.messages.slice(-5);
+                let conversationContext = recentMessages.map(msg => 
+                    `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`
+                ).join('\n');
+                
+                // Combine custom prompt with conversation context and new message
+                const fullPrompt = `${currentPrompt}\n\nKonteks percakapan sebelumnya:\n${conversationContext}\n\nPertanyaan pengguna: ${userMessage}`;
+                
+                // Encode the prompt for the URL
                 const encodedMessage = encodeURIComponent(fullPrompt);
                 
                 // Make API request
@@ -232,20 +246,30 @@
             }
         }
 
-        // Save message to session
-        function saveMessageToSession(message, sender) {
-            // Find current session or create new one
-            let session = chatSessions.find(s => s.id === currentSessionId);
+        // Get Current Session
+        function getCurrentSession() {
+            return chatSessions.find(s => s.id === currentSessionId) || createNewSession();
+        }
+
+        // Create New Session
+        function createNewSession() {
+            const newSession = {
+                id: currentSessionId,
+                title: "Percakapan Baru",
+                messages: [],
+                timestamp: new Date().toISOString(),
+                context: []
+            };
             
-            if (!session) {
-                session = {
-                    id: currentSessionId,
-                    title: message.substring(0, 30) + (message.length > 30 ? '...' : ''),
-                    messages: [],
-                    timestamp: new Date().toISOString()
-                };
-                chatSessions.unshift(session);
-            }
+            chatSessions.unshift(newSession);
+            localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+            
+            return newSession;
+        }
+
+        // Save Message to Session
+        function saveMessageToSession(message, sender) {
+            const session = getCurrentSession();
             
             // Add message to session
             session.messages.push({
@@ -259,6 +283,9 @@
                 session.title = message.substring(0, 30) + (message.length > 30 ? '...' : '');
             }
             
+            // Update timestamp
+            session.timestamp = new Date().toISOString();
+            
             // Save to localStorage
             localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
             localStorage.setItem('currentSessionId', currentSessionId);
@@ -267,14 +294,14 @@
             renderHistoryList();
         }
 
-        // Load chat history
-        function loadChatHistory() {
-            const session = chatSessions.find(s => s.id === currentSessionId);
+        // Load Current Session
+        function loadCurrentSession() {
+            const session = getCurrentSession();
             
             // Clear current chat
             chatHistory.innerHTML = '';
             
-            if (session && session.messages.length > 0) {
+            if (session.messages.length > 0) {
                 // Add messages from session
                 session.messages.forEach(msg => {
                     addMessageToChat(msg.text, msg.sender);
@@ -285,24 +312,41 @@
             }
         }
 
-        // Render history list
+        // Render History List
         function renderHistoryList() {
             historyList.innerHTML = '';
             
             if (chatSessions.length === 0) {
-                historyList.innerHTML = '<div class="history-item" style="justify-content: center; opacity: 0.7;">Tidak ada riwayat</div>';
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <p>Belum ada percakapan</p>
+                    </div>
+                `;
                 return;
             }
             
-            chatSessions.forEach(session => {
+            // Sort sessions by timestamp (newest first)
+            const sortedSessions = [...chatSessions].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            sortedSessions.forEach(session => {
                 const historyItem = document.createElement('div');
                 historyItem.classList.add('history-item');
                 if (session.id === currentSessionId) {
                     historyItem.classList.add('active');
                 }
                 
+                // Format date
+                const date = new Date(session.timestamp);
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
                 historyItem.innerHTML = `
-                    <span>${session.title}</span>
+                    <div>
+                        <div style="font-weight: 600;">${session.title}</div>
+                        <div style="font-size: 12px; opacity: 0.7;">${timeString}</div>
+                    </div>
                     <i class="fas fa-times delete-history"></i>
                 `;
                 
@@ -310,7 +354,7 @@
                     if (!e.target.classList.contains('delete-history')) {
                         currentSessionId = session.id;
                         localStorage.setItem('currentSessionId', currentSessionId);
-                        loadChatHistory();
+                        loadCurrentSession();
                         renderHistoryList();
                     }
                 });
@@ -325,7 +369,7 @@
             });
         }
 
-        // Delete chat session
+        // Delete Chat Session
         function deleteChatSession(sessionId) {
             chatSessions = chatSessions.filter(s => s.id !== sessionId);
             localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
@@ -338,36 +382,37 @@
                     currentSessionId = generateSessionId();
                     localStorage.setItem('currentSessionId', currentSessionId);
                 }
-                loadChatHistory();
+                loadCurrentSession();
             }
             
             renderHistoryList();
+            showNotification('Percakapan telah dihapus');
         }
 
-        // Clear history
+        // Clear All History
         clearHistory.addEventListener('click', () => {
-            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat chat?')) {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat percakapan?')) {
                 chatSessions = [];
                 localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
                 currentSessionId = generateSessionId();
                 localStorage.setItem('currentSessionId', currentSessionId);
-                loadChatHistory();
+                loadCurrentSession();
                 renderHistoryList();
-                showNotification('Semua riwayat chat telah dihapus');
+                showNotification('Semua riwayat percakapan telah dihapus');
             }
         });
 
-        // Generate session ID
+        // Generate Session ID
         function generateSessionId() {
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // Scroll to bottom of chat
+        // Scroll to Bottom of Chat
         function scrollToBottom() {
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
 
-        // Show notification
+        // Show Notification
         function showNotification(message) {
             // Create notification element
             const notification = document.createElement('div');
@@ -401,7 +446,7 @@
             }, 3000);
         }
 
-        // Event listeners
+        // Event Listeners
         sendButton.addEventListener('click', sendMessage);
         
         chatInput.addEventListener('keypress', (e) => {
@@ -411,5 +456,5 @@
             }
         });
 
-        // Initialize app
+        // Initialize App
         init();

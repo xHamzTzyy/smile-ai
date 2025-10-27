@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMILEXPLOIT - AI CHAT</title>
+    <title>AI Chatbot Modern</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -31,6 +31,25 @@
         <div class="container">
             <div class="app-container">
                 <div class="sidebar">
+                    <button class="btn btn-new-chat" id="newChatBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>Percakapan Baru</span>
+                    </button>
+                    
+                    <div class="chat-history-section">
+                        <div class="section-title">
+                            <i class="fas fa-history"></i>
+                            <span>Riwayat Percakapan</span>
+                        </div>
+                        <div class="history-list" id="historyList">
+                            <!-- Riwayat chat akan dimuat di sini -->
+                        </div>
+                        <button class="btn btn-secondary" id="clearHistory">
+                            <i class="fas fa-trash"></i>
+                            <span>Hapus Semua</span>
+                        </button>
+                    </div>
+                    
                     <div class="template-section">
                         <div class="section-title">
                             <i class="fas fa-magic"></i>
@@ -52,29 +71,11 @@
                             <span>Simpan Prompt</span>
                         </button>
                     </div>
-                    
-                    <div class="chat-history-section">
-                        <div class="section-title">
-                            <i class="fas fa-history"></i>
-                            <span>Riwayat Chat</span>
-                        </div>
-                        <div class="history-list" id="historyList">
-                            <!-- Riwayat chat akan dimuat di sini -->
-                        </div>
-                        <button class="btn btn-secondary" id="clearHistory" style="margin-top: 12px;">
-                            <i class="fas fa-trash"></i>
-                            <span>Hapus Riwayat</span>
-                        </button>
-                    </div>
                 </div>
 
                 <div class="chat-container">
                     <div class="chat-history" id="chatHistory">
                         <!-- Pesan chat akan dimuat di sini -->
-                        <div class="message ai-message">
-                            Halo! Saya asisten AI Anda. Silakan ajukan pertanyaan atau pilih template prompt untuk memulai percakapan.
-                            <div class="message-time">Sekarang</div>
-                        </div>
                     </div>
                     <div class="chat-input-container">
                         <input type="text" class="chat-input" id="chatInput" placeholder="Ketik pesan Anda di sini...">
